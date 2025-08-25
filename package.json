@@ -1,16 +1,18 @@
 {
-  "name": "test",
+  "name": "vercel-blob-uploader",
   "version": "1.0.0",
-  "description": "",
+  "description": "Image uploader using Vercel Blob",
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "vercel dev",
+    "start": "vercel dev"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@vercel/blob": "^1.1.1"
+    "@vercel/blob": "^1.1.1",
+    "formidable": "^3.7.0"
   }
 }
