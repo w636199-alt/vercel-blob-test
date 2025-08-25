@@ -1,42 +1,87 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Vercel Blob Image Uploader</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vercel Blob Multi Upload</title>
+  <style>
+    #dropzone {
+      width: 100%;
+      max-width: 500px;
+      height: 150px;
+      border: 2px dashed #666;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 20px 0;
+      cursor: pointer;
+      text-align: center;
+    }
+    #dropzone.hover {
+      border-color: #333;
+      background-color: #f0f0f0;
+    }
+    .preview-container {
+      margin: 10px 0;
+    }
+    .preview-container img {
+      max-width: 150px;
+      margin-right: 10px;
+    }
+  </style>
 </head>
 <body>
-<h1>Upload Image</h1>
-<input type="file" id="fileInput" accept="image/*">
-<br><br>
-<button onclick="uploadFile()">Upload</button>
-<br><br>
-<img id="preview" src="" alt="Preview" width="300">
+  <h1>Upload Files</h1>
+  <div id="dropzone">Drag & Drop files here or click to select</div>
+  <input type="file" id="fileInput" multiple style="display:none;">
+  <div id="previews"></div>
 
-<script>
-async function uploadFile() {
-  const file = document.getElementById('fileInput').files[0];
-  if (!file) return alert('Select a file first');
+  <script>
+    const dropzone = document.getElementById('dropzone');
+    const fileInput = document.getElementById('fileInput');
+    const previews = document.getElementById('previews');
 
-  const formData = new FormData();
-  formData.append('file', file);
+    dropzone.addEventListener('click', () => fileInput.click());
 
-  try {
-    const res = await fetch('/api/upload', {
-      method: 'POST',
-      body: formData
+    dropzone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      dropzone.classList.add('hover');
     });
-    const data = await res.json();
-    if (data.url) {
-      document.getElementById('preview').src = data.url;
-    } else {
-      alert('Upload failed');
+
+    dropzone.addEventListener('dragleave', () => dropzone.classList.remove('hover'));
+
+    dropzone.addEventListener('drop', async (e) => {
+      e.preventDefault();
+      dropzone.classList.remove('hover');
+      const files = e.dataTransfer.files;
+      await handleFiles(files);
+    });
+
+    fileInput.addEventListener('change', async () => {
+      await handleFiles(fileInput.files);
+    });
+
+    async function handleFiles(files) {
+      for (let file of files) {
+        const formData = new FormData();
+        formData.append('file', file);
+
+        const res = await fetch('/api/upload', { method: 'POST', body: formData });
+        const data = await res.json();
+        if (data.url) {
+          const div = document.createElement('div');
+          div.className = 'preview-container';
+          if (file.type.startsWith('image/')) {
+            div.innerHTML = `<img src="${data.url}" alt="${file.name}"><span>${file.name}</span>`;
+          } else {
+            div.innerHTML = `<span>${file.name}: <a href="${data.url}" target="_blank">Open</a></span>`;
+          }
+          previews.appendChild(div);
+        } else {
+          alert(`Upload failed for ${file.name}`);
+        }
+      }
     }
-  } catch (err) {
-    console.error(err);
-    alert('Upload error');
-  }
-}
-</script>
+  </script>
 </body>
 </html>
